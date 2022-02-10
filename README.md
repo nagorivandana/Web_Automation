@@ -1,4 +1,4 @@
-M365 Governance Automation
+UI Automation
 ==========================
 
 ***

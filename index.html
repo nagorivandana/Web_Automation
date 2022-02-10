@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>File Handling</title>
+    <link
+      href="https://fonts.googleapis.com/css?family=Lato|Roboto|Source+Code+Pro"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/styles/monokai.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.min.css"
+    />
+    <style>
+      body {
+        font-family: "Lato", san-serif;
+      }
+
+      h1,
+      h2,
+      h3,
+      h4,
+      h5 {
+        font-family: "Roboto", sans-serif;
+        font-weight: 900;
+        margin: 0;
+      }
+
+      h2 {
+        margin-bottom: 10px;
+      }
+
+      hr {
+        margin: 20px;
+      }
+
+      textarea {
+        width: 100%;
+        white-space: nowrap;
+      }
+
+      code {
+        font-family: "Source Code Pro", monospace;
+      }
+
+      #header {
+        position: fixed;
+        top: 0px;
+        left: 0px;
+        width: 100%;
+        height: 50px;
+        background: #007dc3;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+        z-index: 999;
+        display: flex;
+        justify-content: center;
+      }
+
+      #title {
+        display: flex;
+        align-items: center;
+        color: white;
+        font-size: 1.25rem;
+      }
+
+      #link {
+        float: right;
+        padding-top: 10px;
+        padding-right: 10%;
+        font-size: 1.25rem;
+        font-weight: 600;
+        text-decoration: none;
+      }
+
+      #link a,
+      #link a:hover {
+        color: mediumorchid;
+        text-decoration: none;
+      }
+
+      #container {
+        width: 100%;
+        padding: 0 50px 0 50px;
+        margin: 0 auto;
+        display: block;
+        overflow-x: hidden;
+        background: white;
+      }
+
+      #content {
+        background: white;
+        margin: 50px auto 0 auto;
+        padding: 20px 0 20px 0;
+      }
+
+      #run {
+        margin-top: 10px;
+        border-radius: 15%;
+      }
+
+      .tableWrapper {
+        width: 100%;
+        overflow: scroll;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #b5eaaa;
+      }
+
+      table,
+      th,
+      td {
+        border: 1px solid black;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="header">
+      <h1 id="title">Accessbility Report on ECM Browser</h1>
+    </div>
+    <div id="container">
+      <section id="content">
+        <h4>Choose csv file</h4>
+        <input type="file" id="files" name="files[]" multiple />
+        <p>&nbsp;</p>
+        <h2>Report</h2>
+        <div class="tableWrapper" id="tableWrapper"></div>
+      </section>
+    </div>
+
+    <script
+      src="http://code.jquery.com/jquery-3.3.1.slim.js"
+      integrity="sha256-fNXJFIlca05BIO2Y5zh1xrShK3ME+/lYZ0j+ChxX2DA="
+      crossorigin="anonymous"
+    ></script>
+    <script src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/highlight.min.js"></script>
+    <script>
+      // enable syntax highlighting
+      hljs.initHighlightingOnLoad();
+
+      function handleDialog(event) {
+        var files = event.target.files;
+        var file = files[0];
+
+        var reader = new FileReader();
+        reader.readAsText(file);
+        reader.onload = function() {
+          $("#csvTable").remove();
+          $("#tableWrapper").html("");
+          $("#tableWrapper").append(createTable(reader.result, ","));
+          $("#csvTable").DataTable();
+        };
+      }
+
+      function createTable(data, cellSplitter) {
+        var rows = data.split(/\r?\n|\r/);
+        var table = $('<table id="csvTable"></table>');
+        var thead = $('<thead id="csvTableHead"></thead>');
+        var tbody = $('<tbody id="csvTableBody"></tbody>');
+        table.append(thead);
+        table.append(tbody);
+
+        // Last row is empty
+        for (var i = 0; i < rows.length - 1; i++) {
+          createRow(i === 0 ? thead : tbody, i === 0, rows[i], i, ",");
+        }
+        return table;
+      }
+
+      function createRow(element, isHeader, row, id, cellSplitter) {
+        var cells = row.split(cellSplitter);
+        var tr = $(`<tr id="row_${id}"></tr>`);
+        element.append(tr);
+        for (var i = 0; i < cells.length; i++) {
+          tr.append(
+            $(`<${isHeader ? "th" : "td"}></${isHeader ? "th" : "td"}>`).text(
+              !cells[i] ? " " : cells[i].toString()
+            )
+          );
+        }
+      }
+
+      function isFileAPIAvailable() {
+        // Check for the various File API support.
+        if (
+          window.File &&
+          window.FileReader &&
+          window.FileList &&
+          window.Blob
+        ) {
+          // Great success! All the File APIs are supported.
+          return true;
+        } else {
+          // source: File API availability - http://caniuse.com/#feat=fileapi
+          // source: <output> availability - http://html5doctor.com/the-output-element/
+          document.writeln(
+            "The HTML5 APIs used in this form are only available in the following browsers:<br />"
+          );
+          // 6.0 File API & 13.0 <output>
+          document.writeln(" - Google Chrome: 13.0 or later<br />");
+          // 3.6 File API & 6.0 <output>
+          document.writeln(" - Mozilla Firefox: 6.0 or later<br />");
+          // 10.0 File API & 10.0 <output>
+          document.writeln(
+            " - Internet Explorer: Not supported (partial support expected in 10.0)<br />"
+          );
+          // ? File API & 5.1 <output>
+          document.writeln(" - Safari: Not supported<br />");
+          // ? File API & 9.2 <output>
+          document.writeln(" - Opera: Not supported");
+          return false;
+        }
+      }
+
+      $(document).ready(function() {
+        if (isFileAPIAvailable()) {
+          $("#files").bind("change", handleDialog);
+        }
+      });
+    </script>
+  </body>
+</html>
